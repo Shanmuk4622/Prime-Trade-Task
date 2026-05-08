@@ -1,5 +1,6 @@
 # ── Data (raw CSVs not tracked — too large / proprietary) ──
-data/raw/
+data/raw/*.csv
+data/raw/*.parquet
 data/processed/
 
 # ── Python ──
