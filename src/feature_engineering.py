@@ -50,26 +50,18 @@ def add_trade_level_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
 
-    pnl_col = "closedpnl"
+    pnl_col = "closed_pnl"
 
-    # ── Win flag ───────────────────────────────────────────────────────────────
+    # ── Win flag ─────────────────────────────────────────────────────────────
     if pnl_col in df.columns:
         df["is_win"] = (df[pnl_col] > 0).astype(int)
 
-        # PnL per unit of size traded (risk-adjusted)
-        if "size" in df.columns:
-            df["pnl_per_unit"] = df[pnl_col] / df["size"].replace(0, np.nan)
+        # PnL per unit of size traded (risk-adjusted, use size_usd)
+        size_col = "size_usd" if "size_usd" in df.columns else "size_tokens"
+        if size_col in df.columns:
+            df["pnl_per_unit"] = df[pnl_col] / df[size_col].replace(0, np.nan)
 
-    # ── Leverage bucket ────────────────────────────────────────────────────────
-    if "leverage" in df.columns:
-        df["leverage_bin"] = pd.cut(
-            df["leverage"],
-            bins=[0, 5, 20, 50, np.inf],
-            labels=["low", "medium", "high", "ultra"],
-            right=True,
-        )
-
-    # ── Side binary ───────────────────────────────────────────────────────────
+    # ── Direction binary (real data uses 'Side': BUY=long, SELL=short) ────────────
     if "side" in df.columns:
         df["is_long"] = df["side"].isin(["BUY", "LONG", "B", "L"]).astype(int)
 
@@ -129,10 +121,10 @@ def add_rolling_account_features(df: pd.DataFrame, windows: list[int] = [7, 30])
         Dataframe with additional rolling columns.
     """
     df = df.copy().sort_values(["account", "trade_date"])
-    pnl_col = "closedpnl"
+    pnl_col = "closed_pnl"
 
     if pnl_col not in df.columns:
-        print("[!] closedPnL not found — skipping rolling features")
+        print("[!] closed_pnl not found — skipping rolling features")
         return df
 
     results = []

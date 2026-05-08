@@ -36,7 +36,7 @@ SENTIMENT_FEATURES = [
     "sentiment_volatility_7d", "is_extreme", "is_fear", "is_greed",
 ]
 TRADE_FEATURES = [
-    "size", "leverage", "is_long", "pnl_per_unit",
+    "size_usd", "size_tokens", "is_long", "pnl_per_unit",
     "win_rate_7d", "win_rate_30d", "mean_pnl_7d", "trade_count_7d",
 ]
 TARGET_COL = "is_win"
@@ -73,9 +73,13 @@ def prepare_ml_data(
         print(f"  [!] Missing feature columns (skipped): {missing}")
 
     data = df[available + [target_col]].dropna()
-    X = data[available]
+    X = data[available].copy()
+    # Cast all features to float (avoids XGBoost 'category' dtype issue)
+    for col in X.columns:
+        if X[col].dtype.name == "category" or not pd.api.types.is_numeric_dtype(X[col]):
+            X[col] = X[col].astype(float)
     y = data[target_col].astype(int)
-    print(f"[✓] ML data ready → {X.shape[0]:,} samples × {X.shape[1]} features")
+    print(f"[OK] ML data ready -> {X.shape[0]:,} samples x {X.shape[1]} features")
     return X, y
 
 
@@ -255,7 +259,7 @@ def sentiment_gated_strategy_backtest(
     df["strategy_signal"] = df[regime_col].map(signal_map).fillna(0)
     df["strategy_pnl"]    = df["strategy_signal"] * df[pnl_col]
     df["cum_strategy_pnl"]= df["strategy_pnl"].cumsum()
-    df["cum_baseline_pnl"]= df[pnl_col].cumsum()
+    df["cum_closed_pnl"]  = df[pnl_col].cumsum()
 
     total_strategy  = df["strategy_pnl"].sum()
     total_baseline  = df[pnl_col].sum()

@@ -20,6 +20,10 @@ import pathlib
 import pandas as pd
 import warnings
 
+# Force UTF-8 output on Windows console
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 warnings.filterwarnings("ignore")
 
 # Ensure src/ is on the path when run from project root
@@ -59,9 +63,9 @@ from modelling import (
 
 
 def banner(title: str):
-    print("\n" + "═" * 60)
+    print("\n" + "=" * 60)
     print(f"  {title}")
-    print("═" * 60)
+    print("=" * 60)
 
 
 def main():
@@ -105,8 +109,8 @@ def main():
     anova = run_anova(merged)
     print(f"\nANOVA → F={anova['F_statistic']}, p={anova['p_value']} — {anova['interpretation']}")
 
-    if "regime_numeric" in merged.columns and "closedpnl" in merged.columns:
-        corr = pearson_spearman(merged, "regime_numeric", "closedpnl")
+    if "regime_numeric" in merged.columns and "closed_pnl" in merged.columns:
+        corr = pearson_spearman(merged, "regime_numeric", "closed_pnl")
         print(f"\nCorrelation (regime_numeric ↔ closedPnL):")
         print(f"  Pearson  r={corr['pearson_r']}, p={corr['pearson_p']}")
         print(f"  Spearman r={corr['spearman_r']}, p={corr['spearman_p']}")

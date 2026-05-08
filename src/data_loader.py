@@ -13,11 +13,12 @@ import pandas as pd
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
 
-TRADES_FILE   = RAW_DIR / "historical_trades.csv"
+TRADES_FILE   = RAW_DIR / "historical_data.csv"
 SENTIMENT_FILE = RAW_DIR / "fear_greed_index.csv"
 
 # ── Expected column sets (loose validation) ────────────────────────────────────
-TRADES_REQUIRED_COLS = {"account", "symbol", "side", "closedPnL"}
+# After .str.lower().str.replace(" ", "_") normalisation:
+TRADES_REQUIRED_COLS   = {"account", "coin", "side", "closed_pnl"}
 SENTIMENT_REQUIRED_COLS = {"date", "classification"}
 
 

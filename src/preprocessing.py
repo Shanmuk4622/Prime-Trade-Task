@@ -41,48 +41,54 @@ def clean_trades(df: pd.DataFrame) -> pd.DataFrame:
         Cleaned dataframe.
     """
     df = df.copy()
+    # Normalise column names (idempotent — safe if already normalised)
+    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
 
     # ── 1. Timestamps ──────────────────────────────────────────────────────────
-    time_cols = [c for c in df.columns if "time" in c]
-    for col in time_cols:
-        try:
-            # Handle millisecond epoch integers or ISO strings
-            if pd.api.types.is_numeric_dtype(df[col]):
-                df[col] = pd.to_datetime(df[col], unit="ms", utc=True)
-            else:
-                df[col] = pd.to_datetime(df[col], utc=True, infer_datetime_format=True)
-        except Exception:
-            pass  # Leave unparseable columns as-is
+    # Real CSV has: 'timestamp_ist' (string dd-mm-yyyy HH:MM) and 'timestamp' (epoch seconds)
+    # Parse the human-readable IST column first; fall back to epoch
+    if "timestamp_ist" in df.columns:
+        df["timestamp_ist"] = pd.to_datetime(
+            df["timestamp_ist"], format="%d-%m-%Y %H:%M", errors="coerce"
+        )
+        df["trade_date"] = df["timestamp_ist"].dt.normalize()
+    elif "timestamp" in df.columns:
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", errors="coerce")
+        df["trade_date"] = df["timestamp"].dt.normalize()
 
-    # Identify primary time column
-    primary_time = next((c for c in ["time", "timestamp", "created_at"] if c in df.columns), time_cols[0] if time_cols else None)
-    if primary_time:
-        df["trade_date"] = df[primary_time].dt.normalize()
+    # ── 2. Standardise column aliases ─────────────────────────────────────────
+    # Rename 'coin' → 'symbol' for downstream consistency
+    if "coin" in df.columns and "symbol" not in df.columns:
+        df = df.rename(columns={"coin": "symbol"})
 
-    # ── 2. Numeric casting ─────────────────────────────────────────────────────
-    numeric_candidates = ["closedpnl", "size", "execution_price", "leverage", "start_position"]
+    # ── 3. Numeric casting ─────────────────────────────────────────────────────
+    # Real columns after normalisation: closed_pnl, size_tokens, size_usd, execution_price, fee
+    numeric_candidates = [
+        "closed_pnl", "size_tokens", "size_usd",
+        "execution_price", "start_position", "fee",
+    ]
     for col in numeric_candidates:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # ── 3. Deduplicate ─────────────────────────────────────────────────────────
+    # ── 4. Deduplicate ─────────────────────────────────────────────────────────
     before = len(df)
     df = df.drop_duplicates()
     after = len(df)
     if before != after:
         print(f"  [!] Dropped {before - after:,} duplicate trade rows")
 
-    # ── 4. Drop null PnL ───────────────────────────────────────────────────────
-    pnl_col = "closedpnl" if "closedpnl" in df.columns else None
+    # ── 5. Drop null PnL ───────────────────────────────────────────────────────
+    pnl_col = "closed_pnl" if "closed_pnl" in df.columns else None
     if pnl_col:
         null_count = df[pnl_col].isna().sum()
         df = df.dropna(subset=[pnl_col])
         if null_count:
-            print(f"  [!] Dropped {null_count:,} rows with null closedPnL")
+            print(f"  [!] Dropped {null_count:,} rows with null closed_pnl")
 
-    # ── 5. Side normalisation ──────────────────────────────────────────────────
+    # ── 6. Side normalisation ──────────────────────────────────────────────────
     if "side" in df.columns:
-        df["side"] = df["side"].str.strip().str.upper()  # → 'BUY' / 'SELL' or 'LONG' / 'SHORT'
+        df["side"] = df["side"].str.strip().str.upper()  # → 'BUY' / 'SELL'
 
     print(f"[✓] Trades cleaned      → {len(df):,} rows remain")
     return df.reset_index(drop=True)

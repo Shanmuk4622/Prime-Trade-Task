@@ -27,17 +27,22 @@ from analysis import pnl_by_regime, run_anova, pearson_spearman, trader_segments
 
 @pytest.fixture
 def raw_trades():
-    """Minimal fake trades dataframe."""
+    """Minimal fake trades dataframe matching real column structure."""
     np.random.seed(42)
     n = 200
+    dates = pd.date_range("2023-01-01", periods=n, freq="6H")
     return pd.DataFrame({
-        "account":        [f"acct_{i % 10}" for i in range(n)],
-        "symbol":         np.random.choice(["BTC", "ETH", "SOL"], n),
-        "side":           np.random.choice(["BUY", "SELL"], n),
-        "size":           np.abs(np.random.randn(n)) * 100 + 10,
-        "closedpnl":      np.random.randn(n) * 500,
-        "leverage":       np.random.choice([1, 5, 10, 20, 50], n).astype(float),
-        "time":           pd.date_range("2023-01-01", periods=n, freq="6H").astype(np.int64) // 10**6,
+        "Account":         [f"acct_{i % 10}" for i in range(n)],
+        "Coin":            np.random.choice(["BTC", "ETH", "SOL"], n),
+        "Side":            np.random.choice(["BUY", "SELL"], n),
+        "Size Tokens":     np.abs(np.random.randn(n)) * 100 + 10,
+        "Size USD":        np.abs(np.random.randn(n)) * 1000 + 100,
+        "Execution Price": np.abs(np.random.randn(n)) * 1000 + 20000,
+        "Closed PnL":      np.random.randn(n) * 500,
+        "Start Position":  np.random.randn(n) * 100,
+        "Timestamp IST":   dates.strftime("%d-%m-%Y %H:%M"),
+        "Timestamp":       (dates.astype(np.int64) // 10**9).astype(float),
+        "Fee":             np.abs(np.random.randn(n)) * 2,
     })
 
 
@@ -63,7 +68,7 @@ def test_clean_trades_shape(raw_trades):
 
 def test_clean_trades_no_null_pnl(raw_trades):
     cleaned = clean_trades(raw_trades)
-    assert cleaned["closedpnl"].isna().sum() == 0
+    assert cleaned["closed_pnl"].isna().sum() == 0
 
 
 def test_clean_trades_has_trade_date(raw_trades):
@@ -139,8 +144,8 @@ def test_pearson_spearman_keys(raw_trades, raw_sentiment):
     tc     = add_trade_level_features(clean_trades(raw_trades))
     sc     = add_sentiment_features(clean_sentiment(raw_sentiment))
     merged = merge_datasets(tc, sc)
-    merged = merged.dropna(subset=["regime_numeric", "closedpnl"])
-    result = pearson_spearman(merged, "regime_numeric", "closedpnl")
+    merged = merged.dropna(subset=["regime_numeric", "closed_pnl"])
+    result = pearson_spearman(merged, "regime_numeric", "closed_pnl")
     assert all(k in result for k in ["pearson_r", "spearman_r"])
 
 

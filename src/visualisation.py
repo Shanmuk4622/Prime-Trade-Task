@@ -72,7 +72,7 @@ def plot_sentiment_timeline(sentiment_df: pd.DataFrame, save: bool = True):
 # 2. PnL distribution by regime
 # ─────────────────────────────────────────────────────────────────────────────
 
-def plot_pnl_by_regime(df: pd.DataFrame, pnl_col: str = "closedpnl", save: bool = True):
+def plot_pnl_by_regime(df: pd.DataFrame, pnl_col: str = "closed_pnl", save: bool = True):
     """Violin + box overlay: PnL distribution for each sentiment regime."""
     plot_df = df.dropna(subset=[pnl_col, "regime"]).copy()
     # Clip extreme outliers for readability

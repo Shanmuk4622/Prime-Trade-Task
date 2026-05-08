@@ -18,7 +18,7 @@ from typing import Optional
 REGIME_ORDER = ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"]
 
 
-def pnl_by_regime(df: pd.DataFrame, pnl_col: str = "closedpnl") -> pd.DataFrame:
+def pnl_by_regime(df: pd.DataFrame, pnl_col: str = "closed_pnl") -> pd.DataFrame:
     """
     Aggregate PnL statistics grouped by sentiment regime.
 
@@ -47,7 +47,7 @@ def pnl_by_regime(df: pd.DataFrame, pnl_col: str = "closedpnl") -> pd.DataFrame:
     return result.reindex(available)
 
 
-def run_anova(df: pd.DataFrame, pnl_col: str = "closedpnl") -> dict:
+def run_anova(df: pd.DataFrame, pnl_col: str = "closed_pnl") -> dict:
     """
     One-way ANOVA: test whether mean PnL differs across sentiment regimes.
 
@@ -93,7 +93,7 @@ def pearson_spearman(df: pd.DataFrame, x: str, y: str) -> dict:
     }
 
 
-def account_performance_summary(df: pd.DataFrame, pnl_col: str = "closedpnl") -> pd.DataFrame:
+def account_performance_summary(df: pd.DataFrame, pnl_col: str = "closed_pnl") -> pd.DataFrame:
     """
     Aggregate per-account performance metrics.
 
