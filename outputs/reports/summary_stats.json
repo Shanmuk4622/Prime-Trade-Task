@@ -1,0 +1,51 @@
+{
+  "dataset": {
+    "total_trades": 211224,
+    "unique_accounts": 32,
+    "trading_days": 480,
+    "sentiment_match_rate": 1.0
+  },
+  "anova": {
+    "F_statistic": 12.6629,
+    "p_value": 0.0,
+    "interpretation": "Significant (p<0.05)"
+  },
+  "correlations": {
+    "pearson_r": 0.0066,
+    "pearson_p": 0.002422,
+    "spearman_r": 0.0288,
+    "spearman_p": 0.0
+  },
+  "pnl_by_regime": {
+    "mean_pnl": {
+      "Extreme Fear": 34.71847942762403,
+      "Fear": 57.4242060125976,
+      "Neutral": 34.32439085653683,
+      "Greed": 41.55895880712506,
+      "Extreme Greed": 74.74326748357547
+    },
+    "win_rate": {
+      "Extreme Fear": 0.3457467159801046,
+      "Fear": 0.4456333140543667,
+      "Neutral": 0.3986006280645694,
+      "Greed": 0.40334749027830047,
+      "Extreme Greed": 0.4436939021004904
+    },
+    "total_pnl": {
+      "Extreme Fear": 1088910.388768,
+      "Fear": 3177166.470265,
+      "Neutral": 1246044.036874,
+      "Greed": 2319114.578314,
+      "Extreme Greed": 2423251.475085
+    },
+    "count": {
+      "Extreme Fear": 31364,
+      "Fear": 55328,
+      "Neutral": 36302,
+      "Greed": 55803,
+      "Extreme Greed": 32421
+    }
+  },
+  "overall_win_rate": 0.4112648183918494,
+  "total_gross_pnl": 10296958.943435999
+}

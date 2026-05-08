@@ -15,7 +15,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 import joblib
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, TimeSeriesSplit
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
@@ -30,7 +30,14 @@ ROOT    = pathlib.Path(__file__).resolve().parents[1]
 MDL_DIR = ROOT / "outputs" / "models"
 MDL_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Default feature sets ───────────────────────────────────────────────────────
+# ── Default feature sets ─────────────────────────────────────────────────────
+# Sentiment-ONLY (no rolling account stats) — leakage-free for honest CV
+SENTIMENT_ONLY_FEATURES = [
+    "regime_numeric", "sentiment_shift", "sentiment_shift_7d_mean",
+    "sentiment_volatility_7d", "is_extreme", "is_fear", "is_greed",
+    "size_usd", "size_tokens", "is_long",
+]
+# Full set incl. rolling stats — WARNING: data leakage unless time-split CV used
 SENTIMENT_FEATURES = [
     "regime_numeric", "sentiment_shift", "sentiment_shift_7d_mean",
     "sentiment_volatility_7d", "is_extreme", "is_fear", "is_greed",
@@ -46,6 +53,7 @@ def prepare_ml_data(
     df: pd.DataFrame,
     feature_cols: list[str] = None,
     target_col: str = TARGET_COL,
+    leakage_free: bool = False,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """
     Select features and target, drop rows with NaN, return X, y.
@@ -55,17 +63,20 @@ def prepare_ml_data(
     df : pd.DataFrame
         Fully merged and feature-engineered dataframe.
     feature_cols : list[str]
-        Columns to use as features. Defaults to SENTIMENT_FEATURES + TRADE_FEATURES.
+        Columns to use as features. If None, uses SENTIMENT_ONLY_FEATURES
+        when leakage_free=True, or SENTIMENT_FEATURES+TRADE_FEATURES otherwise.
     target_col : str
         Binary target column name.
-
-    Returns
-    -------
-    tuple[pd.DataFrame, pd.Series]
-        (X, y)
+    leakage_free : bool
+        If True, use only SENTIMENT_ONLY_FEATURES (no rolling stats that leak).
     """
     if feature_cols is None:
-        feature_cols = [c for c in SENTIMENT_FEATURES + TRADE_FEATURES if c in df.columns]
+        if leakage_free:
+            feature_cols = SENTIMENT_ONLY_FEATURES
+            print("[INFO] Using leakage-free sentiment-only features")
+        else:
+            feature_cols = [c for c in SENTIMENT_FEATURES + TRADE_FEATURES if c in df.columns]
+            print("[WARN] Rolling features included — use leakage_free=True for real CV")
 
     available = [c for c in feature_cols if c in df.columns]
     missing   = set(feature_cols) - set(available)

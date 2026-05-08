@@ -140,19 +140,28 @@ def main():
     # ──────────────────────────────────────────────────────────────
     banner("PHASE 6 · Predictive Modelling")
 
-    X, y = prepare_ml_data(merged)
+    # ── Leakage-free model (sentiment + trade size only) ──────────────────
+    print("\n[--- Leakage-Free Model: Sentiment + Size Features Only ---]")
+    X_clean, y_clean = prepare_ml_data(merged, leakage_free=True)
+    if len(X_clean) > 100:
+        xgb_clean = train_xgboost(X_clean, y_clean)
+        print(f"  Clean XGBoost AUC: {xgb_clean['cv_auc_mean']} +/- {xgb_clean['cv_auc_std']}")
 
+    # ── Full model incl. rolling features (leaky, but shows ceiling) ─────
+    print("\n[--- Full Model: All Features (includes rolling — leaky) ---]")
+    X, y = prepare_ml_data(merged)
     if len(X) > 100:
         xgb_results = train_xgboost(X, y)
         lgb_results = train_lightgbm(X, y)
-
         plot_feature_importance(xgb_results["feature_importance"])
 
         print(f"\n{'─'*40}")
-        print(f"  XGBoost  → AUC {xgb_results['cv_auc_mean']} ± {xgb_results['cv_auc_std']}")
-        print(f"  LightGBM → AUC {lgb_results['cv_auc_mean']} ± {lgb_results['cv_auc_std']}")
+        print(f"  [Clean]  XGBoost AUC : {xgb_clean['cv_auc_mean']} +/- {xgb_clean['cv_auc_std']}")
+        print(f"  [Leaky]  XGBoost AUC : {xgb_results['cv_auc_mean']} +/- {xgb_results['cv_auc_std']}")
+        print(f"  [Leaky]  LightGBM AUC: {lgb_results['cv_auc_mean']} +/- {lgb_results['cv_auc_std']}")
+        print(f"  NOTE: AUC=1.0 in leaky model is data leakage, not real generalisation")
     else:
-        print("[!] Not enough labelled samples for ML — skipping modelling phase")
+        print("[!] Not enough labelled samples for ML -- skipping modelling phase")
 
     # ──────────────────────────────────────────────────────────────
     # DONE
