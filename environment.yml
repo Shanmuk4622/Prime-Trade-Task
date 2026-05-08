@@ -1,0 +1,22 @@
+name: cv_conda
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - pandas>=1.4.4
+    - numpy>=1.26.0
+    - scipy>=1.13.0
+    - statsmodels>=0.14.0
+    - scikit-learn>=1.4.0
+    - xgboost>=2.0.0
+    - lightgbm>=4.0.0
+    - plotly>=5.20.0
+    - kaleido>=0.2.1
+    - seaborn>=0.13.0
+    - matplotlib>=3.9.0
+    - jupyter>=1.0.0
+    - jupyterlab>=4.0.0
+    - ipykernel>=6.0.0

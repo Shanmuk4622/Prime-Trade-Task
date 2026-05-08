@@ -1,0 +1,45 @@
+# ── Data (raw CSVs not tracked — too large / proprietary) ──
+data/raw/
+data/processed/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Environments ──
+.env
+.venv
+env/
+venv/
+ENV/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Model artefacts (large binaries) ──
+outputs/models/*.pkl
+outputs/models/*.bin
+
+# ── Secrets ──
+*.pem
+*.key
+secrets.json
